@@ -1,4 +1,5 @@
 .DS_Store
+stdc++.h
 **/.vscode
 **/main
 **/main.exe

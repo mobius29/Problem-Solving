@@ -14,6 +14,7 @@ typedef pair<int ,int> pii;
 typedef pair<ll, ll> pll;
 typedef vector<int>  vi;
 typedef vector<ll> vl;
+typedef vector<bool> vb;
 typedef vector<pii> vii;
 typedef vector<pll> vll;
 typedef tuple<int, int, int> ti;
