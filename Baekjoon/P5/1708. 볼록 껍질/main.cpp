@@ -28,7 +28,7 @@ const int dx[] = {-1, 0, 1, 0};
 const int dy[] = {0, -1, 0, 1};
 
 int N, ans;
-
+vector<point> ans_list;
 
 double getDist(point p, point start, point end) {
   int a = end.second - start.second, b = start.first - end.first;
@@ -40,51 +40,69 @@ double getDist(point p, point start, point end) {
   return (double)q / (a_sqaure + b_square);
 }
 
-void find(vector<point> list, point start, point end) {
-  vector<pii> new_list;
-  int max_point_idx = -1;
-  double max = -1;
+void solve(vector<point> list, point start, point end) {
+  int size = list.size();
 
-  for(int i = 0; i < list.size(); ++i) {
+  int max_point_idx = 0; double max_dist = 0;
+  for(int i = 0; i < size; ++i) {
     double dist = getDist(list[i], start, end);
 
-    if (dist > 0) {
-      new_list.pb(list[i]);
-      if (dist > max) {
-        max_point_idx = i;
-        max = dist;
-      }
+    if (dist > max_dist) {
+      max_dist = dist;
+      max_point_idx = i;
+    }
+  }
+  
+  vector<point> left, right;
+  point max_point = list[max_point_idx]; ans_list.pb(max_point);
+
+  for(int i = 0; i < size; ++i) {
+    if (i > max_point_idx) {
+      double dist = getDist(list[i], start, max_point);
+      if (dist > 0) left.pb(list[i]);
+    }
+    else if (i < max_point_idx) {
+      double dist = getDist(list[i], max_point, end);
+      if (dist > 0) right.pb(list[i]);
     }
   }
 
-  if (max_point_idx == -1) return;
-  
-  ++ans;
+  if (left.size() > 0) solve(left, start, max_point);
+  if (right.size() > 0) solve(right, max_point, end);
+}
 
-  find(new_list, start, list[max_point_idx]);
-  find(new_list, list[max_point_idx], end);
+int compare(point a, point b) {
+  if (a.first == b.first) return a.second < b.second;
+  return a.first < b.first;
 }
 
 int main() {
-  sync(); cin >> N; ans = 2;
+  sync(); cin >> N;
   vector<point> point_list;
-
   for (int i = 0; i < N; ++i) {
     point p; cin >> p.first >> p.second;
     point_list.pb(p);
   }
 
-  point min, max;
-  min = max = point_list[0];
-  for(int i = 1; i < N; ++i) {
-    if (point_list[i].first < min.first) min = point_list[i];
-    if (point_list[i].first > max.first) max = point_list[i];
+  sort(all(point_list), compare);
+  ans_list.pb(point_list[0]);
+  ans_list.pb(point_list[N-1]);
+
+  vector<point> up, down;
+  for(int i = 1; i < N - 1; ++i) {
+    double dist = getDist(point_list[i], point_list[0], point_list[N-1]);
+    if (dist > 0) up.pb(point_list[i]);
+    else if (dist < 0) down.pb(point_list[i]);
   }
 
-  find(point_list, min, max);
-  find(point_list, max, min);
+  if (up.size() > 0) solve(up, point_list[0], point_list[N-1]);
+  if (down.size() > 0) solve(down, point_list[N-1], point_list[0]);
 
-  cout << ans << endl;
+  // cout << endl;
+  // for(int i = 0; i < ans_list.size(); ++i) {
+  //   cout << ans_list[i].first << ends << ans_list[i].second << endl;
+  // }
+  cout << ans_list.size() << endl;
 }
 
 /*
