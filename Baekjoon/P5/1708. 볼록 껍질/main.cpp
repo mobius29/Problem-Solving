@@ -27,8 +27,9 @@ const ll LINF = 0x3f3f3f3f3f3f3f3f;
 const int dx[] = {-1, 0, 1, 0};
 const int dy[] = {0, -1, 0, 1};
 
-int N, ans;
-vector<point> ans_list;
+int N;
+vi answer;
+vector<point> point_list;
 
 double getDist(point p, point start, point end) {
   int a = end.second - start.second, b = start.first - end.first;
@@ -40,69 +41,116 @@ double getDist(point p, point start, point end) {
   return (double)q / (a_sqaure + b_square);
 }
 
-void solve(vector<point> list, point start, point end) {
-  int size = list.size();
-
-  int max_point_idx = 0; double max_dist = 0;
-  for(int i = 0; i < size; ++i) {
-    double dist = getDist(list[i], start, end);
-
-    if (dist > max_dist) {
-      max_dist = dist;
-      max_point_idx = i;
-    }
-  }
+void solve(vi list, int start_idx, int end_idx, int max_idx, bool isLeftToRight) {
+  answer.pb(max_idx);
   
-  vector<point> left, right;
-  point max_point = list[max_point_idx]; ans_list.pb(max_point);
+  point start = point_list[start_idx], end = point_list[end_idx], max = point_list[max_idx];
 
-  for(int i = 0; i < size; ++i) {
-    if (i > max_point_idx) {
-      double dist = getDist(list[i], start, max_point);
-      if (dist > 0) left.pb(list[i]);
+  vi start_max, max_end;
+  int start_max_idx = -1, max_end_idx = -1;
+  double start_max_dist = -1, max_end_dist = -1;
+
+  for (int i = 0; i < list.size(); ++i) {
+    point cur = point_list[list[i]];
+
+    if (isLeftToRight) {
+      if (cur.first < max.first) {
+        double dist = getDist(cur, start, max);
+        if (dist > 0) {
+          start_max.pb(list[i]);
+          if (dist > start_max_dist) {
+            start_max_idx = list[i];
+            start_max_dist = dist;
+          }        
+        }
+      }
+
+      if (cur.first > max.first) {
+        double dist = getDist(cur, max, end);
+        if (dist > 0) {
+          max_end.pb(list[i]);
+          if (dist > max_end_dist) {
+            max_end_idx = list[i];
+            max_end_dist = dist;
+          }
+        }
+      }
     }
-    else if (i < max_point_idx) {
-      double dist = getDist(list[i], max_point, end);
-      if (dist > 0) right.pb(list[i]);
+
+    else {
+      if (cur.first > max.first) {
+        double dist = getDist(cur, start, max);
+        if (dist > 0) {
+          start_max.pb(list[i]);
+          if (dist > start_max_dist) {
+            start_max_idx = list[i];
+            start_max_dist = dist;
+          }        
+        }
+      }
+
+      if (cur.first < max.first) {
+        double dist = getDist(cur, max, end);
+        if (dist > 0) {
+          max_end.pb(list[i]);
+          if (dist > max_end_dist) {
+            max_end_idx = list[i];
+            max_end_dist = dist;
+          }
+        }
+      } 
     }
   }
 
-  if (left.size() > 0) solve(left, start, max_point);
-  if (right.size() > 0) solve(right, max_point, end);
-}
-
-int compare(point a, point b) {
-  if (a.first == b.first) return a.second < b.second;
-  return a.first < b.first;
+  if (start_max.size() > 0) solve(start_max, start_idx, max_idx, start_max_idx, isLeftToRight);
+  if (max_end.size() > 0) solve(max_end, max_idx, end_idx, max_end_idx, isLeftToRight);
 }
 
 int main() {
   sync(); cin >> N;
-  vector<point> point_list;
+  int min_idx = 40001, max_idx = -40001;
+  int min_x = -1, max_x = -1;
+
   for (int i = 0; i < N; ++i) {
     point p; cin >> p.first >> p.second;
     point_list.pb(p);
+
+
+    if (p.first < min_x) {
+      min_idx = i;
+      min_x = p.first;
+    }
+
+    if (p.first > max_x) {
+      max_idx = i;
+      max_x = p.first;
+    }
   }
 
-  sort(all(point_list), compare);
-  ans_list.pb(point_list[0]);
-  ans_list.pb(point_list[N-1]);
+  answer.pb(min_idx); answer.pb(max_idx);
 
-  vector<point> up, down;
-  for(int i = 1; i < N - 1; ++i) {
-    double dist = getDist(point_list[i], point_list[0], point_list[N-1]);
-    if (dist > 0) up.pb(point_list[i]);
-    else if (dist < 0) down.pb(point_list[i]);
+  vi left, right;
+  int max_left_idx = -1, max_right_idx = -1;
+  double max_left_dist = -1, max_right_dist = -1;
+  for (int i = 0; i < N; ++i) {
+    double dist = getDist(point_list[i], point_list[min_idx], point_list[max_idx]);
+
+    if (dist < 0) {
+      left.pb(i);
+      max_left_idx = i;
+      max_left_dist = max(max_left_dist, abs(dist));
+    }
+    if (dist > 0) {
+      right.pb(i);
+      max_right_idx = i;
+      max_right_dist = max(max_right_dist, dist);
+    }
   }
 
-  if (up.size() > 0) solve(up, point_list[0], point_list[N-1]);
-  if (down.size() > 0) solve(down, point_list[N-1], point_list[0]);
+  if(left.size() > 0) solve(left, max_idx, min_idx, max_left_idx, false);
+  if(right.size() > 0 )solve(right, min_idx, max_idx, max_right_idx, true);
 
-  // cout << endl;
-  // for(int i = 0; i < ans_list.size(); ++i) {
-  //   cout << ans_list[i].first << ends << ans_list[i].second << endl;
-  // }
-  cout << ans_list.size() << endl;
+  cout << answer.size() << endl;
 }
 
 /*
