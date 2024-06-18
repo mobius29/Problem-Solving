@@ -3,13 +3,6 @@ use std::io::Write;
 use std::str::SplitAsciiWhitespace;
 use std::{fmt, io};
 
-fn read() -> Tokenizer<SplitAsciiWhitespace<'static>> {
-    let buf = io::read_to_string(io::stdin()).unwrap();
-    let str: &'static str = Box::leak(buf.into_boxed_str());
-
-    Tokenizer::new(str, |s| s.split_ascii_whitespace())
-}
-
 fn main() {
     // read
 
@@ -39,6 +32,13 @@ fn main() {
 
     // flush buffer
     buf_write.flush().unwrap();
+}
+
+fn read() -> Tokenizer<SplitAsciiWhitespace<'static>> {
+    let buf = io::read_to_string(io::stdin()).unwrap();
+    let str: &'static str = Box::leak(buf.into_boxed_str());
+
+    Tokenizer::new(str, |s| s.split_ascii_whitespace())
 }
 
 // Define Errors For Input
